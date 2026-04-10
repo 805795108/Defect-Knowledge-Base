@@ -1,6 +1,6 @@
 # Defect Knowledge Base
 
-AI 编程助手（Cursor / Claude Code）的**缺陷经验治理系统**。将开发中遇到的 Bug、踩坑、失败尝试等隐性知识，结构化为可检索、可复用的 **Experience Card**，形成团队级缺陷经验资产。
+AI 缺陷知识库（Defect Knowledge Base）是一套嵌入 AI 编程助手（Cursor / Claude Code）工作流的**经验治理系统**。它将团队在开发过程中遇到的 Bug、踩坑、失败尝试等隐性知识，结构化为可检索、可复用的 **Experience Card**，形成组织级缺陷经验资产。
 
 > 架构设计借鉴 [MemGovern](https://github.com/QuantaAlpha/MemGovern) 论文提出的"经验治理"方法论。
 
