@@ -1,0 +1,29 @@
+Score the following Experience Card on 6 dimensions (1-5 each):
+
+1. signal_clarity: Do keywords cover error type / symptom / trigger condition / component?
+2. root_cause_depth: Does it point to the real cause, not just symptoms?
+3. fix_portability: Is it decoupled from specific code and reusable?
+4. patch_digest_quality: Are key code changes clearly described?
+5. verification_plan: Can someone execute the verification steps?
+6. infosec: Does it leak secrets / credentials / internal URLs?
+
+Card content:
+{card_json}
+
+Output STRICT JSON (no markdown fences):
+{{
+  "scores": {{
+    "signal_clarity": N,
+    "root_cause_depth": N,
+    "fix_portability": N,
+    "patch_digest_quality": N,
+    "verification_plan": N,
+    "infosec": N
+  }},
+  "average": N.N,
+  "issues": ["specific issue description", ...],
+  "pass": true/false
+}}
+
+Mark pass=false if ANY dimension scores below 3 or average is below 3.5.
+For each dimension below 3, provide a specific improvement suggestion in issues.

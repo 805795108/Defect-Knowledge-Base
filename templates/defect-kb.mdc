@@ -1,0 +1,93 @@
+---
+description: 缺陷知识库（Defect KB）自动注入 + 工作流引导
+globs: []
+alwaysApply: true
+---
+
+# 缺陷知识库自动注入
+
+## 前提守卫
+
+项目根目录不存在 `defect-kb.yaml` → 本规则所有内容**静默跳过**，不做任何提示。
+
+`defect-kb-data/chroma_db/` 不存在或为空 → 跳过自动注入，仅保留场景 B 沉淀提醒和首次使用引导。
+
+> `{SKILL_DIR}` = `.cursor/skills/defect-knowledge-base` 或 `.claude/skills/defect-knowledge-base`
+
+## 首次使用引导
+
+`defect-kb.yaml` 存在但 `defect-kb-data/cards.jsonl` 不存在或为空时，给出一次性引导：
+
+> 检测到缺陷知识库配置但知识库为空。说 **"治理缺陷数据"** 批量导入，或说 **"记录缺陷"** 写入单条卡片。
+
+---
+
+## 自动注入（核心机制）
+
+读取 `defect-kb.yaml` 的 `auto_injection` 配置段。`auto_injection.enabled` 为 `false` 或配置段不存在 → 跳过自动注入，退回到手动触发模式（场景 A/C/D 的建议性提示）。
+
+### 触发条件（满足任一即自动检索）
+
+1. 用户描述了 bug / 报错 / crash / 异常（`bug_fix` 类任务）
+2. 用户要求实现/开发某功能或模块（`feature_dev` 类任务）
+3. 用户要求 code review 或正在执行审查（`code_review` 类任务）
+4. 当前正在执行 fix-bug / feature-dev / code-review 类 Skill
+
+仅当任务类型在 `auto_injection.trigger_on` 列表中时触发。
+
+### 跳过条件（满足任一则不检索）
+
+- 纯问答/聊天/讨论（不涉及代码生成或修改）
+- 文档编写、配置修改、git 操作
+- 本次会话已对**相同或高度相似的 query** 检索过
+- 本次会话自动检索次数已达 `auto_injection.max_searches_per_session`（默认 3）
+
+### 执行步骤
+
+1. 从用户消息提取 2-5 个技术关键词作为 query（错误信息、模块名、技术点）
+2. 从上下文推断 platform（ios / backend / web 等），无法推断则省略 `--platform`
+3. 执行检索（静默执行，不向用户展示命令本身）：
+
+```bash
+python3 {SKILL_DIR}/defect-kb/bootstrap.py search \
+  --query "{query}" \
+  --platform {platform} \
+  --top-k {auto_injection.max_results} \
+  --min-similarity {auto_injection.min_similarity} \
+  --output-format compact
+```
+
+4. **有结果**：在响应开头以引用块展示，然后正常执行任务：
+
+> **已知陷阱提醒**（缺陷知识库）：
+> - [DEF-xxx|P1] 问题摘要 → 修复策略
+> - [DEF-yyy|P2] 问题摘要 → 修复策略
+
+5. **无结果**：正常执行任务，不展示任何提示
+
+用户可说 **"展开 DEF-xxx"** 查看完整卡片详情。
+
+---
+
+## 场景 B：Bug 修复后 — 沉淀提醒
+
+**触发**：完成 Bug 修复且未经过已接线的 fix-bug Skill（post-fix-hook 未自动执行），且满足任一：排查经历 2+ 个失败假设 / 跨模块改动 / 出现发现性语句 / 涉及并发/缓存/安全。
+
+> 本次修复经验建议沉淀到缺陷知识库。说 **"记录缺陷"** 开始，或说 **"跳过"** 忽略。
+
+## 触发词速查
+
+| 动作 | 触发词 |
+|------|--------|
+| 写入经验卡片 | "记录缺陷"、"写缺陷卡片"、"沉淀踩坑"、"write defect card" |
+| 手动检索 | "查缺陷库"、"搜踩坑"、"search defect"、"有没有类似的坑" |
+| 批量治理 | "治理缺陷数据"、"迁移踩坑记录"、"主动发现缺陷" |
+| 展开卡片 | "展开 DEF-xxx" |
+
+## 非侵入原则
+
+- 每个场景提示最多出现**一次**（同一会话内不重复）
+- 自动注入每会话最多 `max_searches_per_session` 次
+- 用户说"跳过"或"不需要"后当前会话不再提示
+- 无 `defect-kb.yaml` 时**完全静默**
+- 自动注入不阻断任何工作流，仅前置展示

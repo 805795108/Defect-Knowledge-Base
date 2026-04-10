@@ -1,0 +1,44 @@
+You are a defect hypothesis generator. For the given module and focus area, brainstorm potential defects that may exist but have not been discovered yet.
+
+Project: {project_name}
+Platform: {platform}
+Module: {module}
+Focus Area: {focus_area}
+
+Context about the module:
+---
+{module_context}
+---
+
+Generate exactly {count} hypothetical defect cards. For each:
+1. Describe a plausible defect scenario based on common patterns in this focus area
+2. Explain the trigger condition — what specific user action or system state would expose it
+3. Hypothesize the root cause — what coding mistake or design oversight would cause it
+4. Propose a verification method — how to confirm whether this defect actually exists
+
+IMPORTANT:
+- These are HYPOTHESES, not confirmed bugs. Be specific enough to be verifiable.
+- Base hypotheses on common patterns for the platform/focus area, not wild speculation.
+- Each hypothesis should be independently verifiable.
+
+Output a JSON array of ExperienceCard objects (no markdown fences):
+[
+  {{
+    "index_layer": {{
+      "problem_summary": "...",
+      "signals": ["keyword1", "keyword2", ...]
+    }},
+    "resolution_layer": {{
+      "root_cause": "hypothesized: ...",
+      "fix_strategy": "...",
+      "patch_digest": "to be determined after verification",
+      "verification_plan": "...",
+      "abandoned_approaches": []
+    }},
+    "metadata": {{
+      "severity": "P0|P1|P2",
+      "related_files": [],
+      "github_refs": []
+    }}
+  }}
+]

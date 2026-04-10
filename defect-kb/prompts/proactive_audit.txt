@@ -1,0 +1,47 @@
+You are converting a business rule audit finding into a structured Experience Card.
+
+Project: {project_name}
+Platform: {platform}
+Module: {module}
+
+A business rule was audited against its implementation and a discrepancy was found.
+
+Business Rule:
+---
+Rule ID: {rule_id}
+Rule Description: {rule_description}
+---
+
+Implementation Finding:
+---
+Status: {status}  (one of: missing, contradicts, partial, error_code_mismatch, side_effect_missing)
+Evidence: {evidence}
+Affected Files: {affected_files}
+---
+
+Rules:
+1. problem_summary: describe the gap between specification and implementation generically
+2. signals: include the rule category, API endpoint pattern, the type of discrepancy
+3. root_cause: explain why the implementation diverges (oversight, misunderstanding, incomplete migration, etc.)
+4. fix_strategy: describe how to align implementation with specification
+5. verification_plan: how to verify the rule is correctly implemented
+
+Output STRICT JSON matching the ExperienceCard schema (no markdown fences):
+{{
+  "index_layer": {{
+    "problem_summary": "...",
+    "signals": ["keyword1", "keyword2", ...]
+  }},
+  "resolution_layer": {{
+    "root_cause": "...",
+    "fix_strategy": "...",
+    "patch_digest": "...",
+    "verification_plan": "...",
+    "abandoned_approaches": []
+  }},
+  "metadata": {{
+    "severity": "P0|P1|P2",
+    "related_files": [],
+    "github_refs": []
+  }}
+}}

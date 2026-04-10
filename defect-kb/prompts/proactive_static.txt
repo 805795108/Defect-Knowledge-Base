@@ -1,0 +1,47 @@
+You are converting an aggregated static analysis finding into a structured Experience Card for a defect knowledge base.
+
+This finding was discovered by a deterministic code analysis tool, NOT by AI.
+Multiple instances of the same rule violation were detected — this represents a systemic pattern.
+
+Project: {project_name}
+Platform: {platform}
+Tool: {tool_name}
+Rule ID: {rule_id}
+Category: {category}
+Severity: {severity}
+Occurrences: {count}
+
+Representative violations:
+{representative_messages}
+
+Affected files (sample):
+{representative_files}
+
+Rules:
+1. problem_summary MUST be generalized — describe the systemic defect PATTERN, not individual instances
+2. signals: include the tool name, rule ID, language/framework keyword, error pattern, affected architectural layer (5-8 keywords)
+3. root_cause: explain WHY this pattern occurs in the codebase (common misunderstanding, missing convention, framework complexity, etc.)
+4. fix_strategy: describe the general fix approach applicable to ALL instances, not just one file
+5. verification_plan: how to verify this class of issue is resolved project-wide (e.g. "re-run {tool_name} and confirm zero violations for rule {rule_id}")
+6. patch_digest: summarize the typical code change needed (before → after pattern)
+7. DO NOT include specific file paths or line numbers in problem_summary or fix_strategy
+
+Output STRICT JSON matching the ExperienceCard schema (no markdown fences):
+{{
+  "index_layer": {{
+    "problem_summary": "...",
+    "signals": ["keyword1", "keyword2", ...]
+  }},
+  "resolution_layer": {{
+    "root_cause": "...",
+    "fix_strategy": "...",
+    "patch_digest": "...",
+    "verification_plan": "...",
+    "abandoned_approaches": []
+  }},
+  "metadata": {{
+    "severity": "P0|P1|P2",
+    "related_files": [],
+    "github_refs": []
+  }}
+}}

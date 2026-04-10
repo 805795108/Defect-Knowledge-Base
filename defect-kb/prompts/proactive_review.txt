@@ -1,0 +1,45 @@
+You are converting a code review finding into a structured Experience Card for a defect knowledge base.
+
+Project: {project_name}
+Platform: {platform}
+Module: {module}
+
+The following issue was discovered during an AI-driven code review.
+It has NOT been confirmed by a human yet — mark it as a proactive discovery.
+
+Code Review Finding:
+---
+Severity: {severity}
+File: {file_path}
+Line: {line_number}
+Issue: {issue_description}
+Why it matters: {why_it_matters}
+Suggested fix: {suggested_fix}
+---
+
+Rules:
+1. problem_summary MUST be generalized — describe the defect pattern, not the specific instance
+2. signals: include the error pattern, language/framework keyword, affected architectural layer
+3. fix_strategy: describe the general fix approach applicable to similar code
+4. root_cause: explain the underlying programming mistake or design flaw
+5. verification_plan: how to verify this class of issue is fixed (not just this instance)
+
+Output STRICT JSON matching the ExperienceCard schema (no markdown fences):
+{{
+  "index_layer": {{
+    "problem_summary": "...",
+    "signals": ["keyword1", "keyword2", ...]
+  }},
+  "resolution_layer": {{
+    "root_cause": "...",
+    "fix_strategy": "...",
+    "patch_digest": "...",
+    "verification_plan": "...",
+    "abandoned_approaches": []
+  }},
+  "metadata": {{
+    "severity": "P0|P1|P2",
+    "related_files": ["{file_path}"],
+    "github_refs": []
+  }}
+}}

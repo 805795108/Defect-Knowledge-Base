@@ -1,0 +1,53 @@
+You are a defect experience governance expert. Convert the following raw defect record into a structured Experience Card.
+
+Project: {project_name}
+Platform: {platform}
+Module: {module}
+
+Rules:
+1. problem_summary MUST be generalized — no repo names, commit hashes, or specific variable names
+2. signals MUST cover 4 dimensions: error type, symptom, trigger condition, affected component (5-12 keywords)
+3. fix_strategy MUST be decoupled from specific code paths — describe the abstract fix approach
+4. abandoned_approaches MUST explain why each approach was rejected
+5. severity: P0 = core flow blocked, P1 = important degradation, P2 = minor/edge case
+6. patch_digest should summarize the key code change without pasting full diffs
+7. verification_plan must be actionable steps someone can follow to verify the fix
+8. defect_category: classify the defect into one of these categories (or null if none fit):
+   - "ai-hallucination": AI generated calls to non-existent APIs/methods
+   - "ai-antipattern": AI-generated code anti-patterns (over-nesting, eval, etc.)
+   - "ai-security": AI-generated security issues (SQL injection, hardcoded secrets, etc.)
+   - "ai-edge-case": AI missed edge case handling (timezone, concurrency, null, etc.)
+   - "framework-pitfall": Framework-specific known gotcha
+   - "framework-deprecation": Deprecated API/pattern usage
+   - "team-pattern": Team-specific recurring pattern
+9. framework_info: if the defect is tied to a specific framework/library, provide:
+   - name: framework/library name (e.g. "SwiftUI", "Spring Boot")
+   - version_constraint: version range where the issue applies (e.g. ">= 0.2", "iOS 16+"), or "" if universal
+   - deprecated_api: the specific deprecated API if applicable, or ""
+
+Raw record:
+---
+{raw_text}
+---
+
+Output STRICT JSON matching this schema (no markdown fences, no extra text):
+{{
+  "index_layer": {{
+    "problem_summary": "...",
+    "signals": ["keyword1", "keyword2", ...]
+  }},
+  "resolution_layer": {{
+    "root_cause": "...",
+    "fix_strategy": "...",
+    "patch_digest": "...",
+    "verification_plan": "...",
+    "abandoned_approaches": ["approach1: reason", ...]
+  }},
+  "metadata": {{
+    "severity": "P0|P1|P2",
+    "related_files": ["path/to/file.ext"],
+    "github_refs": [],
+    "defect_category": "ai-hallucination|ai-antipattern|ai-security|ai-edge-case|framework-pitfall|framework-deprecation|team-pattern|null",
+    "framework_info": {{"name": "...", "version_constraint": "...", "deprecated_api": "..."}} or null
+  }}
+}}
