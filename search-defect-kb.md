@@ -2,8 +2,8 @@
 name: search-defect-kb
 description: >
   在缺陷知识库中语义检索相似踩坑经验，辅助当前问题的诊断和修复。
-  触发词："查缺陷库"、"搜踩坑"、"search defect"、"有没有类似的坑"、"查知识库"
-domain: qa
+  Use when the user says "查缺陷库"、"搜踩坑"、"search defect"、"有没有类似的坑"、"查知识库",
+  or when diagnosing a bug and historical defect patterns may help.
 ---
 
 # Search Defect Knowledge Base

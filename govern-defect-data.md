@@ -3,9 +3,8 @@ name: govern-defect-data
 description: >
   批量治理缺陷数据：从存量文件 / Issue Tracker（GitHub、云效、GitLab） / AI 主动发现等多数据源提取缺陷，
   标准化为 Experience Card 并建索引。
-  触发词："治理缺陷数据"、"迁移踩坑记录"、"govern defect data"、"批量导入缺陷"、
-  "主动发现缺陷"、"proactive discovery"
-domain: qa
+  Use when the user says "治理缺陷数据"、"迁移踩坑记录"、"govern defect data"、"批量导入缺陷"、
+  "主动发现缺陷"、"proactive discovery".
 ---
 
 # Govern Defect Data

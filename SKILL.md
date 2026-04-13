@@ -2,9 +2,8 @@
 name: defect-knowledge-base
 description: >
   从当前对话中提取缺陷信息，标准化为 Experience Card 并写入知识库。
-  支持多平台 Issue Tracker 导入（GitHub、云效 Yunxiao、GitLab）。
-  触发词："记录缺陷"、"写缺陷卡片"、"沉淀踩坑"、"write defect card"、"save defect"
-domain: qa
+  Use when the user says "记录缺陷"、"写缺陷卡片"、"沉淀踩坑"、"write defect card"、"save defect",
+  or after a bug fix when post-fix-hook triggers automatic experience capture.
 ---
 
 # Write Defect Card
