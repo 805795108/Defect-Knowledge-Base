@@ -1,0 +1,37 @@
+You are a defect knowledge base assistant. The user just typed a one-liner about a bug they hit. Turn it into the SMALLEST valid Experience Card so it gets captured before they forget.
+
+Project: {project_name}
+Platform: {platform}
+Module: {module}
+
+Constraints (this is "quick" mode — relaxed):
+1. problem_summary: 1-2 sentences, generalized. If the input is too vague to generalize, restate it verbatim.
+2. signals: at minimum 5 keywords (the schema requires it). Cover what you can: error type / symptom / trigger / component. Use placeholders like "TODO" only if absolutely nothing else applies.
+3. root_cause / fix_strategy / patch_digest / verification_plan: each may be a single sentence — even just "TODO: investigate" is acceptable. The point of quick mode is capture, not depth.
+4. severity: default P2 unless the input clearly indicates otherwise (P0 for "crash" / "down" / "core flow blocked"; P1 for "regression" / "broken").
+5. Do NOT invent technical detail the user didn't provide. Quick cards are placeholders; depth comes later via 'cli.py upgrade'.
+
+Raw note:
+---
+{raw_text}
+---
+
+Output STRICT JSON (no markdown fences, no extra text):
+{{
+  "index_layer": {{
+    "problem_summary": "...",
+    "signals": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
+  }},
+  "resolution_layer": {{
+    "root_cause": "...",
+    "fix_strategy": "...",
+    "patch_digest": "...",
+    "verification_plan": "...",
+    "abandoned_approaches": []
+  }},
+  "metadata": {{
+    "severity": "P0|P1|P2",
+    "related_files": [],
+    "github_refs": []
+  }}
+}}

@@ -173,6 +173,8 @@ python {SKILL_DIR}/defect-kb/bootstrap.py govern \
 python {SKILL_DIR}/defect-kb/bootstrap.py index --output-format json
 ```
 
+> **注**：`govern` 写入成功时已自动重生 `defect-kb-data/INDEX.md`（人类可读的卡片目录，随仓库一起 review）。如需在 `index` 之外手动重建，可执行 `index --rebuild-md`。
+
 ### Step 6: 联动（可选）
 
 读取 `defect-kb.yaml` 的 `integrations` 配置：
@@ -185,12 +187,14 @@ python {SKILL_DIR}/defect-kb/bootstrap.py index --output-format json
 
 | 命令 | 功能 | 关键参数 |
 |------|------|---------|
-| `init` | 初始化项目配置 | `--template {mobile\|web\|backend\|fullstack}`、`--install-skills`、`--force` |
-| `govern` | 原始文本→Card | `--input` 或 `--json`、`--quality-json`、`--platform`、`--force`、`--auto-retry`、`--output-format` |
-| `index` | Card→向量索引 | `--embedding-provider {openai\|local}`、`--output-format` |
-| `search` | 语义检索 | `--query`、`--platform`、`--top-k`、`--min-similarity`、`--output-format {text\|json\|compact}` |
+| `init` | 初始化项目配置 | `--template {mobile\|web\|backend\|fullstack}`、`--install-skills`、`--force`、`--import-seeds [PLATFORMS\|all]`、`--skip-seeds` |
+| `govern` | 原始文本→Card（写入后自动重生 `INDEX.md`） | `--input` 或 `--json`、`--quality-json`、`--platform`、`--force`、`--auto-retry`、`--output-format` |
+| `quick` | 一句话 5 秒落卡（跳过质量门禁，标记 `metadata.quick=true`） | `note`（位置参数）、`--platform`、`--module`、`--severity {P0\|P1\|P2}`、`--no-llm`（强制本地最小卡）、`--json`（Agent 预填）、`--output-format` |
+| `upgrade` | 把 quick 卡升级为完整卡（重跑 standardize + 质量门禁） | `--id`、`--input`（新原文）、`--json`（Agent 预填）、`--force`、`--skip-quality`、`--output-format` |
+| `index` | Card→向量索引 | `--embedding-provider {openai\|local}`、`--rebuild-md`（仅重建 `INDEX.md` 后退出）、`--output-format` |
+| `search` | 语义检索（命中后累计 `usage_count`） | `--query`、`--platform`、`--top-k`、`--min-similarity`、`--no-record`（只读模式）、`--output-format {text\|json\|compact}` |
 | `browse` | 按ID查看 | `--id`、`--output-format` |
-| `stats` | 质量统计 | `--output-format` |
+| `stats` | ASCII Dashboard：分布、Top Hot、Cold Candidates、质量门禁 | `--include-seeds`、`--include-quick`、`--output-format {text\|json}` |
 
 ## 新项目接入
 
@@ -198,9 +202,14 @@ python {SKILL_DIR}/defect-kb/bootstrap.py index --output-format json
 # 方式 1：使用模板快速初始化（推荐）
 python {SKILL_DIR}/defect-kb/bootstrap.py init --template mobile --install-skills
 
-# 方式 2：交互式自定义初始化
+# 方式 2：模板 + 立即导入种子卡片（冷启动直接可 search）
+python {SKILL_DIR}/defect-kb/bootstrap.py init --template mobile --install-skills --import-seeds
+
+# 方式 3：交互式自定义初始化
 python {SKILL_DIR}/defect-kb/bootstrap.py init --install-skills
 ```
+
+**种子卡片说明**：`defect-kb/seeds/built-in.jsonl` 内置 15 张 AI 编程通病示例（common / ios / android / web / backend 各 3 张）。导入后所有种子标记 `metadata.seed=true`，默认从 `stats` Dashboard 中排除，但参与 `search`，让冷仓库立即"显得有内容"。
 
 ## 工作流引导（上下文感知提醒）
 

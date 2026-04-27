@@ -112,6 +112,30 @@ class Metadata(BaseModel):
     quality: Optional[QualityScore] = Field(
         default=None, description="Quality gate assessment scores"
     )
+    usage_count: int = Field(
+        default=0,
+        ge=0,
+        description="Times this card was returned in search top-k results (auto-maintained)",
+    )
+    last_hit_at: Optional[str] = Field(
+        default=None,
+        description="ISO timestamp of the most recent search hit (auto-maintained)",
+    )
+    seed: bool = Field(
+        default=False,
+        description="True for seed cards bundled with the skill (imported via init --import-seeds). "
+        "Surfaced separately in INDEX.md / stats dashboard so they don't dilute project-specific signal.",
+    )
+    quick: bool = Field(
+        default=False,
+        description="True for cards captured via 'cli.py quick' — minimal one-liner notes that "
+        "skip the 6-dimension quality gate. Can be promoted via 'cli.py upgrade --id'.",
+    )
+    upgraded_at: Optional[str] = Field(
+        default=None,
+        description="ISO timestamp of when a 'quick' card was promoted to a full card. "
+        "When set, 'quick' remains true (history-preserving) but the card is treated as full-grade.",
+    )
 
 
 class ExperienceCard(BaseModel):

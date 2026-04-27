@@ -19,6 +19,11 @@ AI 缺陷知识库（Defect Knowledge Base）是一套嵌入 AI 编程助手（C
 - **6 维质量门禁** — 信号清晰度、根因深度、修复可移植性、补丁摘要、验证计划、信息安全，低于阈值严格阻断
 - **多平台 Issue Tracker** — 支持 GitHub / 云效 Yunxiao / GitLab 导入
 - **三级检索流水线** — 语义检索 → 混合检索（关键词+语义）→ Reranker 精排
+- **热度感知排序** — `usage_count` / `last_hit_at` 自动累计，频繁命中的卡片轻微靠前（log 饱和，不喧宾夺主）
+- **可见的知识资产** — `defect-kb-data/INDEX.md` 在每次 `govern`/`quick`/`upgrade` 后自动重生，作为人类可读的卡片目录随仓库一起 review
+- **冷启动种子卡片** — `init --import-seeds` 一键导入 15 张 AI 编程通病示例，新仓库装完立即可 search
+- **5 秒记一笔（quick）** — `cli.py quick "<一句话>"` 跳过质量门禁快速沉淀，事后用 `cli.py upgrade --id` 升级为完整卡片
+- **ASCII Dashboard** — `stats` 命令直接在终端渲染分布柱图、Top Hot Cards、Cold Candidates，像 htop 看 KB 状态
 - **Auto-RAG 自动注入** — Agent 编码时自动检索并注入相关缺陷警告，零用户操作
 - **多 LLM Provider** — 支持 OpenAI / Claude / DeepSeek / Qwen / 豆包
 - **主动发现** — 静态分析、Code Review、业务规则审计、边界假设探测
@@ -36,11 +41,21 @@ AI 缺陷知识库（Defect Knowledge Base）是一套嵌入 AI 编程助手（C
 # 使用模板快速初始化（可选: mobile / web / backend / fullstack）
 python .cursor/skills/defect-knowledge-base/defect-kb/bootstrap.py init --template mobile --install-skills
 
+# 推荐：同时导入种子卡片，让仓库装完即可 search
+python .cursor/skills/defect-knowledge-base/defect-kb/bootstrap.py init \
+  --template mobile --install-skills --import-seeds
+
 # 或交互式自定义初始化
 python .cursor/skills/defect-knowledge-base/defect-kb/bootstrap.py init --install-skills
 ```
 
 > `bootstrap.py` 会自动在 `defect-kb-data/.venv/` 创建虚拟环境并安装依赖，无需手动 `pip install`。
+
+`--import-seeds` 取值：
+- 不带值（推荐） → 自动按检测到的 `platforms` 选择，并始终包含 `common` 通用卡
+- `all` → 全部 15 张
+- `ios,backend` 等 → 显式平台列表 + `common`
+- `--skip-seeds` → 显式跳过
 
 ### 2. 使用方式
 
@@ -88,13 +103,15 @@ SKILL_DIR=".cursor/skills/defect-knowledge-base"
 
 | 命令 | 功能 | 示例 |
 |------|------|------|
-| `init` | 初始化项目配置 | `python $SKILL_DIR/defect-kb/bootstrap.py init --template mobile` |
-| `govern` | 原始文本 → Experience Card | `python $SKILL_DIR/defect-kb/bootstrap.py govern --json '{...}'` |
-| `index` | 构建向量索引 | `python $SKILL_DIR/defect-kb/bootstrap.py index` |
-| `search` | 语义检索 | `python $SKILL_DIR/defect-kb/bootstrap.py search --query "内存泄漏"` |
+| `init` | 初始化项目配置（`--import-seeds` 一键导入示例卡片） | `python $SKILL_DIR/defect-kb/bootstrap.py init --template mobile --import-seeds` |
+| `govern` | 原始文本 → Experience Card（写入后自动重生 INDEX.md） | `python $SKILL_DIR/defect-kb/bootstrap.py govern --json '{...}'` |
+| `quick` | 一句话 5 秒落卡（跳过质量门禁，标记 `quick=true`） | `python $SKILL_DIR/defect-kb/bootstrap.py quick "Redis 击穿没加 single-flight"` |
+| `upgrade` | 把 quick 卡升级为完整卡（重跑标准化 + 质量门禁） | `python $SKILL_DIR/defect-kb/bootstrap.py upgrade --id DEF-20260427-003` |
+| `index` | 构建向量索引（`--rebuild-md` 仅重建 INDEX.md） | `python $SKILL_DIR/defect-kb/bootstrap.py index` |
+| `search` | 语义检索（命中后累计 usage_count，`--no-record` 只读） | `python $SKILL_DIR/defect-kb/bootstrap.py search --query "内存泄漏"` |
 | `browse` | 按 ID 查看卡片 | `python $SKILL_DIR/defect-kb/bootstrap.py browse --id DEF-001` |
-| `stats` | 质量统计 | `python $SKILL_DIR/defect-kb/bootstrap.py stats` |
-| `report` | 生成质量报告 | `python $SKILL_DIR/defect-kb/bootstrap.py report` |
+| `stats` | ASCII Dashboard（默认排除 seed/quick；`--include-seeds` `--include-quick` 可纳入） | `python $SKILL_DIR/defect-kb/bootstrap.py stats` |
+| `report` | 生成质量报告（Markdown 或 HTML Dashboard） | `python $SKILL_DIR/defect-kb/bootstrap.py report` |
 
 ## Experience Card 结构
 
@@ -102,18 +119,30 @@ SKILL_DIR=".cursor/skills/defect-knowledge-base"
 
 - **Index Layer** — `problem_summary`（泛化问题描述）+ `signals`（5-12 个高信号关键词）
 - **Resolution Layer** — `root_cause`（根因）+ `fix_strategy`（抽象修复策略）+ `patch_digest`（代码变更摘要）+ `verification_plan`（验证方案）
-- **Metadata** — `severity`（P0/P1/P2）+ `confidence`（confirmed/likely/hypothesis）+ `platform` + `module` + `quality_scores`
+- **Metadata** — `severity`（P0/P1/P2）+ `confidence`（confirmed/likely/hypothesis）+ `platform` + `module` + `quality_scores` + `usage_count` / `last_hit_at`（热度，CLI 自动维护）+ `seed` / `quick` / `upgraded_at`（卡片来源标记）
 
 ## 工作流
 
 ```
+init --import-seeds → 导入 15 张种子卡（seed=true，立即可 search）
+    ↓
 Bug 修复完成
     ↓
 自动/手动触发 → 提取缺陷信息 → LLM 标准化 → 质量门禁(6维评分)
     ↓                                              ↓
-  通过 → 用户确认 → 写入 cards.jsonl → 更新向量索引
+  通过 → 用户确认 → 写入 cards.jsonl → 重生 INDEX.md → 更新向量索引
     ↓
   未通过 → 改进建议 → 自动重试/手动修改 → 重新评估
+
+(快速通道)
+快想到一个坑 → cli.py quick "<一句话>" → 写入 cards.jsonl（quick=true，跳过门禁）→ 重生 INDEX.md
+    ↓
+事后有时间 → cli.py upgrade --id DEF-... → 重新标准化 + 质量门禁 → quick=false, upgraded_at 时间戳
+
+(检索反馈环)
+开发中 → 检索知识库 (search) → 命中 → usage_count += 1, last_hit_at = now
+    ↓
+随时 → stats Dashboard 看 Top Hot / Cold Candidates / 质量分布（默认排除 seed/quick）
 ```
 
 ## 依赖
